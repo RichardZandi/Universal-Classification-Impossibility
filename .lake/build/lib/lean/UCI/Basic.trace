@@ -1,0 +1,29 @@
+{"log":
+ [{"message":
+   ".> LEAN_PATH=/Users/richardzandi/UCI/.lake/packages/Cli/.lake/build/lib/lean:/Users/richardzandi/UCI/.lake/packages/batteries/.lake/build/lib/lean:/Users/richardzandi/UCI/.lake/packages/Qq/.lake/build/lib/lean:/Users/richardzandi/UCI/.lake/packages/aesop/.lake/build/lib/lean:/Users/richardzandi/UCI/.lake/packages/proofwidgets/.lake/build/lib/lean:/Users/richardzandi/UCI/.lake/packages/importGraph/.lake/build/lib/lean:/Users/richardzandi/UCI/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/Users/richardzandi/UCI/.lake/packages/plausible/.lake/build/lib/lean:/Users/richardzandi/UCI/.lake/packages/mathlib/.lake/build/lib/lean:/Users/richardzandi/UCI/.lake/build/lib/lean /Users/richardzandi/.elan/toolchains/leanprover--lean4---v4.20.0-rc5/bin/lean /Users/richardzandi/UCI/UCI/Basic.lean -R /Users/richardzandi/UCI -o /Users/richardzandi/UCI/.lake/build/lib/lean/UCI/Basic.olean -i /Users/richardzandi/UCI/.lake/build/lib/lean/UCI/Basic.ilean -c /Users/richardzandi/UCI/.lake/build/ir/UCI/Basic.c --json",
+   "level": "trace"},
+  {"message":
+   "/Users/richardzandi/UCI/UCI/Basic.lean:47:6: try 'simp at hEq' instead of 'simpa using hEq'\nnote: this linter can be disabled with `set_option linter.unnecessarySimpa false`",
+   "level": "warning"},
+  {"message":
+   "/Users/richardzandi/UCI/UCI/Basic.lean:52:6: try 'simp at hEq' instead of 'simpa using hEq'\nnote: this linter can be disabled with `set_option linter.unnecessarySimpa false`",
+   "level": "warning"}],
+ "inputs":
+ [["UCI.Basic:deps",
+   [["deps",
+     [["UCI/UCI:extraDep", [["@UCI:extraDep", "1723"]]],
+      ["import oleans",
+       [["Mathlib.Tactic:olean",
+         [["Mathlib.Tactic:deps", "17119809092124589991"],
+          ["/Users/richardzandi/UCI/.lake/packages/mathlib/.lake/build/lib/lean/Mathlib/Tactic.olean",
+           "16912176118873962178"]]]]]]],
+    ["libs",
+     [["import dynlibs", "1723"],
+      ["package external libraries", "1723"],
+      ["module dynlibs", "1723"],
+      ["module plugins", "1723"]]]]],
+  ["Lean 4.20.0, commit 81b85203c90439fb7d7e0cec32130d62d8cb7a2e",
+   "11339845437623234285"],
+  ["Module.leanArgs: #[]", "1723"],
+  ["/Users/richardzandi/UCI/UCI/Basic.lean", "3022763373923268686"]],
+ "depHash": "17530116357285226834"}

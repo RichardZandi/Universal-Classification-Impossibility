@@ -1,0 +1,10 @@
+name = "UCI"
+version = "0.1.0"
+defaultTargets = ["uci"]
+
+[[lean_lib]]
+name = "UCI"
+
+[[lean_exe]]
+name = "uci"
+root = "Main"
