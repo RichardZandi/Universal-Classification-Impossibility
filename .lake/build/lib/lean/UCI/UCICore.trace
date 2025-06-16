@@ -3,13 +3,13 @@
    ".> LEAN_PATH=/Users/richardzandi/UCI/.lake/packages/Cli/.lake/build/lib/lean:/Users/richardzandi/UCI/.lake/packages/batteries/.lake/build/lib/lean:/Users/richardzandi/UCI/.lake/packages/Qq/.lake/build/lib/lean:/Users/richardzandi/UCI/.lake/packages/aesop/.lake/build/lib/lean:/Users/richardzandi/UCI/.lake/packages/proofwidgets/.lake/build/lib/lean:/Users/richardzandi/UCI/.lake/packages/importGraph/.lake/build/lib/lean:/Users/richardzandi/UCI/.lake/packages/LeanSearchClient/.lake/build/lib/lean:/Users/richardzandi/UCI/.lake/packages/plausible/.lake/build/lib/lean:/Users/richardzandi/UCI/.lake/packages/mathlib/.lake/build/lib/lean:/Users/richardzandi/UCI/.lake/packages/godelnumbering/.lake/build/lib/lean:/Users/richardzandi/UCI/.lake/packages/Kleene2/.lake/build/lib/lean:/Users/richardzandi/UCI/.lake/build/lib/lean /Users/richardzandi/.elan/toolchains/leanprover--lean4---v4.20.0/bin/lean /Users/richardzandi/UCI/UCI/UCICore.lean -R /Users/richardzandi/UCI -o /Users/richardzandi/UCI/.lake/build/lib/lean/UCI/UCICore.olean -i /Users/richardzandi/UCI/.lake/build/lib/lean/UCI/UCICore.ilean -c /Users/richardzandi/UCI/.lake/build/ir/UCI/UCICore.c --json",
    "level": "trace"},
   {"message":
-   "/Users/richardzandi/UCI/UCI/UCICore.lean:173:10: try 'simp at hEq'' instead of 'simpa using hEq''\nnote: this linter can be disabled with `set_option linter.unnecessarySimpa false`",
+   "/Users/richardzandi/UCI/UCI/UCICore.lean:185:6: try 'simp at this' instead of 'simpa using this'\nnote: this linter can be disabled with `set_option linter.unnecessarySimpa false`",
    "level": "warning"},
   {"message":
-   "/Users/richardzandi/UCI/UCI/UCICore.lean:181:10: try 'simp at hEq'' instead of 'simpa using hEq''\nnote: this linter can be disabled with `set_option linter.unnecessarySimpa false`",
+   "/Users/richardzandi/UCI/UCI/UCICore.lean:192:6: try 'simp at this' instead of 'simpa using this'\nnote: this linter can be disabled with `set_option linter.unnecessarySimpa false`",
    "level": "warning"},
   {"message":
-   "/Users/richardzandi/UCI/UCI/UCICore.lean:188:0: -- Found 0 errors in 9 declarations (plus 25 automatically generated ones) in the current file with 15 linters\n\n\n-- All linting checks passed!",
+   "/Users/richardzandi/UCI/UCI/UCICore.lean:217:0: -- Found 0 errors in 10 declarations (plus 25 automatically generated ones) in the current file with 15 linters\n\n\n-- All linting checks passed!",
    "level": "info"}],
  "inputs":
  [["UCI.UCICore:deps",
@@ -44,5 +44,5 @@
   ["Lean 4.20.0, commit 77cfc4d1a4f6ef6651792b781eaa6676b4f3f060",
    "16311077432335102250"],
   ["Module.leanArgs: #[]", "1723"],
-  ["/Users/richardzandi/UCI/UCI/UCICore.lean", "14783175693242206283"]],
- "depHash": "17990777515821499108"}
+  ["/Users/richardzandi/UCI/UCI/UCICore.lean", "3254100026343530785"]],
+ "depHash": "6586596262621644386"}

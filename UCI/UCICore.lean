@@ -1,31 +1,55 @@
 /-
-# Universal Classification Impossibility (UCI) engine
+────────────────────────────────────────────────────────────────────────
+  universal–classification impossibility
+────────────────────────────────────────────────────────────────────────
 
-This module bundles the generic diagonal‑argument that shows **no computable
-finite‑information classifier can perfectly separate an “exceptional” subset**
-of a Gödel‑coded universe.  It is the formal core underlying the impossibility
-claims in the accompanying papers *Collatz at the House Edge* and *Spatial
-Necessity*.
+### Concept recap
+* `Code`                   ― Gödel numbers for partial recursive programs.
+* `Numbering.decode n : D` ― a *transport* that re-interprets the natural
+  number `n` as a value of the target domain `D`.  (Usually `D = ℕ`,
+  but the machinery is completely polymorphic.)
+* `Classifiers D`          ― a *bundled* Boolean predicate `C : D → Bool`.
+  We keep the computability proof separate from the data to avoid passing
+  it around by hand.
 
-The file is intentionally self‑contained – the only imports beyond mathlib are
-our helper libraries **Godelnumbering** (total `numToCode` + transport) and
-**Kleene2** (Gödel‑generic second recursion theorem).
+### File contents
+1.  **Helper codes `code0`, `code1`**
+    Tiny programs returning the numerals 0 and 1.  They act as *Boolean tags*
+    for the general UCI engine.  Nothing prevents callers from supplying
+    their own “bad / good” witnesses, but the hard-wired pair is convenient
+    for the classic use-case.
 
-## Module layout
+2.  **`uciGeneral` (main theorem)**
+    ```
+    Φ computable
+    Φ respects extensionality
+    Φ(bad)  = false
+    Φ(good) = true
+    ───────────────────────────────
+                   ⊥
+    ```
+    *Proof idea*   Diagonalise: build a code transformer
+    ```
+      f c := if Φ (decode ⌜c⌝) then bad else good
+    ```
+    obtain its Kleene fixed point `c₀`, evaluate both sides at 0, and
+    observe that Φ must assign *both* truth-values to `bad` (or `good`),
+    which is impossible.
 
-| Section | Purpose |
-|---------|---------|
-| **Classifier API**     | Defines a *bundled* Boolean predicate `Classifier D`. |
-| **Two constant codes** | Convenience constants `code0/code1` used as Boolean tags. |
-| **`uci` theorem**      | The engine: given a computable classifier and mild extensionality assumptions, derives `False`. |
+3.  **Wrapper lemma `uci`**
+    Maintains the original API expected by existing proofs: it simply calls
+    `uciGeneral` with `bad = Code.const 0`, `good = Code.const 1`.
 
-Because the final contradiction still relies on domain‑specific facts
-(`hCode0`, `hCode1`), this file stops one step short of a *fully* generic UCI
-lemma – but all the computability plumbing is in place.
+### Key implementation notes
+* **Computable plumbing** `hBit` and `hSel` show that both the bit extractor
+  and the selector are computable; therefore `f` is computable and we may
+  apply Rogers/Kleene fixed-point theorem (`kleene_fix hf`).
+* **Extensionality bridge** `hΦ_eq` ports the classifier value across the
+  semantic equality `c₀.eval = (f c₀).eval`.
+* **Boolean case split** Finally we split on the bit `Φ.C d` and obtain
+  the contradiction with `hBad`, `hGood`.
 
-*No `sorry`s, no external axioms.*
-
-
+No `sorry` — the proof is fully constructive and standalone.
 -/
 
 import Mathlib.Computability.PartrecCode
@@ -73,115 +97,121 @@ private def b2n : Bool → ℕ | true => 1 | false => 0
 
 /-! ## Universal Classification Impossibility  -/
 
-/-- **`uci`** — core diagonal argument.
 
-Inputs
-* `Φ`   – computable classifier bundled as `Classifier D`.
-* `hC`   – proof that `Φ.C` is `Computable`.
-* `hDec` – computable decoding map (usually `Computable.id` for `ℕ`).
-* `hExt` – *extensionality*: classifiers respect code‑level equality.
-* `hCode0 / hCode1` – the classifier’s behaviour on the two constant codes.
+/-! -----------------------------------------------------------------
+    ##  General engine
+------------------------------------------------------------------- -/
 
-Outputs
-* `False`.  (Hence such a simultaneously computable & extensional classifier
-  cannot exist with both `hCode0` and `hCode1`.)
+/-- **`uciGeneral` – Universal-classification impossibility
+    with caller-supplied witnesses.**
 
-The proof follows the standard script:
-1.  Build a computable *bit* function that queries the classifier on the
-    decoded form of a code.
-2.  Turn that bit into a *selector* that chooses `code0` or `code1`.
-3.  Define `f : Code → Code` using the selector; obtain a Kleene fixed point
-    `c₀` for `f`.
-4.  Evaluate both sides at input `0` to relate the classifier’s bit to the
-    constant codes.
-5.  Use `hExt` to transfer the classifier value across the extensional
-    equality, split on the Boolean, and contradict `hCode0` / `hCode1`.
+If a bundled classifier `Φ` is
 
-This is exactly the plumbing needed for the UCI template; domain‑specific
-projects supply concrete `Φ`, `hCode0`, `hCode1` to obtain their own
-impossibility corollaries. -/
+* total computable (`hC`);
+* respects code‐level extensionality (`hExt`);
+* and maps `bad ↦ false`, `good ↦ true`;
+
+then `False` follows.
+
+The proof is the standard Kleene–diagonal construction:
+build a transformer `f`, get its Kleene fixed point `c₀`, then show
+`Φ` contradicts itself on that fixed point. -/
+
+lemma uciGeneral
+    (Φ        : Classifiers D)
+    (hC       : Computable Φ.C)
+    (hDec     : Computable (fun n : ℕ => (Numbering.decode n : D)))
+    (hExt     : ∀ {c₁ c₂ : Code},
+                 c₁.eval = c₂.eval →
+                 Φ.C (Numbering.decode (Encodable.encode c₁)) =
+                 Φ.C (Numbering.decode (Encodable.encode c₂)))
+    (bad good : Code)
+    (hBad  : Φ.C (Numbering.decode (Encodable.encode bad))  = false)
+    (hGood : Φ.C (Numbering.decode (Encodable.encode good)) = true) :
+    False := by
+  classical
+  ------------------------------------------------------------
+  -- 1 ▸ computable “bit” : Code → Bool
+  ------------------------------------------------------------
+  have hBit : Computable (fun c : Code =>
+      Φ.C (Numbering.decode (Encodable.encode c))) := by
+    have hEnc  : Computable (fun c : Code => Encodable.encode c) :=
+      Computable.encode
+    have hDecE :
+        Computable (fun c : Code =>
+          (Numbering.decode (Encodable.encode c) : D)) :=
+      hDec.comp hEnc
+    exact hC.comp hDecE
+
+  ------------------------------------------------------------
+  -- 2 ▸ selector Bool → Code   (maps bit ↦ bad / good)
+  ------------------------------------------------------------
+  have hSelPrim : Primrec (fun b : Bool => if b then bad else good) := by
+    have hPred : PrimrecPred (fun b : Bool => b = true) := by
+      dsimp [PrimrecPred]; simpa using (Primrec.id : Primrec (fun b : Bool => b))
+    simpa using
+      Primrec.ite hPred (Primrec.const bad) (Primrec.const good)
+
+  have hSel : Computable (fun b : Bool => if b then bad else good) :=
+    hSelPrim.to_comp
+
+  ------------------------------------------------------------
+  -- 3 ▸ transformer  f : Code → Code
+  ------------------------------------------------------------
+  let f : Code → Code :=
+    fun c => if Φ.C (Numbering.decode (Encodable.encode c)) then bad else good
+  have hf : Computable f := by
+    simpa [f] using hSel.comp hBit
+
+  ------------------------------------------------------------
+  -- 4 ▸ Kleene fixed point
+  ------------------------------------------------------------
+  rcases kleene_fix hf with ⟨c₀, hc⟩
+  let d : D := Numbering.decode (Encodable.encode c₀)
+
+  ------------------------------------------------------------
+  -- 5 ▸ Transport classifier values; case split on Φ.C d
+  ------------------------------------------------------------
+  have hΦ_eq :
+      Φ.C d = Φ.C (Numbering.decode (Encodable.encode (f c₀))) := by
+    dsimp [d]; exact hExt hc
+
+  cases hCd : Φ.C d with
+  | false =>
+      have hf₀ : f c₀ = good := by simp [f, d, hCd]
+      have : (false : Bool) =
+          Φ.C (Numbering.decode (Encodable.encode good)) := by
+        simpa [hf₀, hCd] using hΦ_eq
+      simpa [hGood] using this
+
+  | true  =>
+      have hf₀ : f c₀ = bad := by simp [f, d, hCd]
+      have : (true : Bool) =
+          Φ.C (Numbering.decode (Encodable.encode bad)) := by
+        simpa [hf₀, hCd] using hΦ_eq
+      simpa [hBad] using this
+
+/-! -----------------------------------------------------------------
+    ##  Wrapper (original API)
+------------------------------------------------------------------- -/
+
+
+/-- Compatibility wrapper that hard-codes
+    `bad = Code.const 0`, `good = Code.const 1`. -/
 lemma uci
     (Φ    : Classifiers D)
     (hC   : Computable Φ.C)
     (hDec : Computable (fun n : ℕ => (Numbering.decode n : D)))
-    (hExt : ∀ {c₁ c₂ : Code},                     -- extensionality
-            c₁.eval = c₂.eval →
+    (hExt : ∀ {c₁ c₂ : Code}, c₁.eval = c₂.eval →
             Φ.C (Numbering.decode (Encodable.encode c₁)) =
             Φ.C (Numbering.decode (Encodable.encode c₂)))
-    (hCode0 : Φ.C (Numbering.decode (Encodable.encode code0)) = false)
-    (hCode1 : Φ.C (Numbering.decode (Encodable.encode code1)) = true) :
-    False := by
-  classical
+    (h0 : Φ.C (Numbering.decode (Encodable.encode code0)) = false)
+    (h1 : Φ.C (Numbering.decode (Encodable.encode code1)) = true) :
+    False := uciGeneral Φ hC hDec hExt code0 code1 h0 h1
 
-  ------------------------------------------------------------------
-  -- 1 ▸ `bit` : Code → Bool   (asks Φ about the decoded code)
-  ------------------------------------------------------------------
-  have hBit : Computable (fun c : Code => Φ.C (Numbering.decode (Encodable.encode c))) := by
-    have hEnc  : Computable (fun c : Code => Encodable.encode c) := Computable.encode
-    have hDecE : Computable (fun c : Code => (Numbering.decode (Encodable.encode c) : D)) :=
-      hDec.comp hEnc
-    exact hC.comp hDecE
-
-  ------------------------------------------------------------------
-  -- 2 ▸ `selector` : Bool → Code   (maps the bit to one of two constants)
-  ------------------------------------------------------------------
-  have hSelPrim : Primrec (fun b : Bool => if b then code0 else code1) := by
-    -- `Primrec.ite` expects a `Prop` predicate; supply `b = true`.
-    have hPred : PrimrecPred (fun b : Bool => b = true) := by
-      dsimp [PrimrecPred]
-      simpa using (Primrec.id : Primrec (fun b : Bool => b))
-    simpa using
-      Primrec.ite hPred (Primrec.const code0) (Primrec.const code1)
-
-  have hSel : Computable (fun b : Bool => if b then code0 else code1) :=
-    hSelPrim.to_comp
-
-  ------------------------------------------------------------------
-  -- 3 ▸ Transformer `f : Code → Code`
-  ------------------------------------------------------------------
-  let f : Code → Code := fun c =>
-    if Φ.C (Numbering.decode (Encodable.encode c)) then code0 else code1
-
-  have hf : Computable f := by
-    simpa [f] using hSel.comp hBit
-
-  ------------------------------------------------------------------
-  -- 4 ▸ Kleene fixed point   c₀.eval = (f c₀).eval
-  ------------------------------------------------------------------
-  rcases kleene_fix hf with ⟨c₀, hc⟩
-  let d : D := Numbering.decode (Encodable.encode c₀)
-
-  ------------------------------------------------------------------
-  -- 5 ▸ Transport classifier values and split on Φ.C d
-  ------------------------------------------------------------------
-  -- 5·1  Use extensionality to move Φ across the equality hc.
-  have hΦ_eq : Φ.C d =
-      Φ.C (Numbering.decode (Encodable.encode (f c₀))) := by
-    dsimp [d] at *
-    exact hExt hc
-
-  -- 5·2  Case split on `b := Φ.C d`.
-  have : False := by
-    cases hCd : Φ.C d with
-    | false =>
-        have hf' : f c₀ = code1 := by simp [f, d, hCd]
-        have hEq' : (false : Bool) =
-            Φ.C (Numbering.decode (Encodable.encode code1)) := by
-          simpa [hCd, hf'] using hΦ_eq
-        have hContr : (false : Bool) = true := by
-          simpa [hCode1] using hEq'
-        cases hContr
-    | true =>
-        have hf' : f c₀ = code0 := by simp [f, d, hCd]
-        have hEq' : (true : Bool) =
-            Φ.C (Numbering.decode (Encodable.encode code0)) := by
-          simpa [hCd, hf'] using hΦ_eq
-        have hContr : (true : Bool) = false := by
-          simpa [hCode0] using hEq'
-        cases hContr
-  exact this
 
 end Classifier
 end Kleene.UCI
+
 
 #lint
